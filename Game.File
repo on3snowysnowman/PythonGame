@@ -23,6 +23,7 @@ class weapon:
         self.a2cp = a2cp
 
 
+
 class enemy:
 
     def __init__(self, name, health, maxhealth, dmin, dmax, gold, chest, potion, cb, dif, mag, evasionchance):
@@ -39,6 +40,7 @@ class enemy:
         self.dif = dif
         self.mag = mag
         self.evasionchance = evasionchance
+
 
 
 class character:
@@ -69,16 +71,18 @@ dagger = weapon(12, 19, 'Stab', 2, 8, 17, 'Slash', 1, 'Dagger', 'critical', None
 
 
 #NAME = CLASS (NAME, DMIN, DMAX, LOOT, CB, GA, CA, PA, DIF)
-goblin = enemy('Goblin', 70, 70, 14, 27, True, False, False, 1, 'basic', False, 2)
+goblin = enemy('Goblin', 70, 70, 14, 27, True, False, False, 1, 'basic', False, 1)
+bandit = enemy("Bandit", 80, 80, 12, 33, True, False, False, 2, 'basic', False, 1)
 
 
 playeractiveweapon = ironsword
 playeractivearmor = 'Iron Armor'
-armorstrength = .3
+armorstrength = .4
 magicstrength = 0
 
 cycle = False
 escape = False
+questcycle = False
 
 player = character(None, 3, 200, 200, 3, 1, playeractiveweapon.a1dmin, playeractiveweapon.a1dmax, playeractiveweapon.a2dmin,
                    playeractiveweapon.a2dmax, None, .2, None, None, 0)
@@ -102,6 +106,14 @@ isenemypoison = False
 enemypoisonturn = 0
 isenemydeath = False
 
+questlocation = None
+activequest = None
+activequestname = None
+
+town = True
+playerlocation =  'Abandoned Cave'
+location = ['Grand Castle', 'Abandoned Cave', 'Village Of Norbury', 'Small Town Of Ironforge']
+
 
 basicgoldloot = [100, 100, 100, 200, 200, 100, 300, 400,  300, 200, 100, 100, 100]
 hardgoldloot = [300, 300, 400, 200, 500, 300, 400, 100, 200, 300]
@@ -111,12 +123,10 @@ legendarygoldloot = [1000, 1500, 1400, 1300, 900, 1100, 1400, 1200]
 potionlist = ['health potion', 'health flask', 'max health potion', 'energy flask', 'energy potion', 'max energy potion',
                'strength flask', 'strength potion', 'rage flask', 'rage potion']
 
-town = True
-location = ['Grand Castle', 'Village Of Norbury', 'Abandoned Cave', 'Small Town Of Ironforge']
-playerlocation =  'Abandoned Cave'
 
+override = False
 
-travelenemies = [goblin]
+travelenemies = [goblin, bandit]
 
 #FUNCTIONS
 
@@ -193,6 +203,26 @@ def loot():
             pass
 
     return
+
+
+def classbonus():
+
+    global playeractiveweapon
+
+    if playerclass == 'warrior':
+        pass
+
+    if playerclass == 'knight':
+        pass
+
+    if playerclass == 'mage':
+        pass
+
+    if playerclass == 'hunter':
+        pass
+
+    if playerclass == 'rogue':
+        pass
 
 
 def checkenemyhealth(activeenemy):
@@ -537,6 +567,7 @@ def playerattack(player):
     global isplayerpoison
     global isenemypoison
     global enemypoisonturn
+    global override
 
     while True:
 
@@ -872,7 +903,7 @@ def playerattack(player):
                     else:
                         continue
 
-            if activeenemy.dif is "hard":
+            elif activeenemy.dif is "hard":
                 enemyinvasionchance = random.randrange(activeenemy.evasionchance, 11)
 
                 if enemyinvasionchance in [1, 2, 3, 4]:
@@ -1147,7 +1178,7 @@ def playerattack(player):
                     else:
                         continue
 
-            if activeenemy.dif is "difficult":
+            elif activeenemy.dif is "difficult":
                 enemyinvasionchance = random.randrange(activeenemy.evasionchance, 11)
 
                 if enemyinvasionchance in [1, 2, 3, 4, 5]:
@@ -1422,7 +1453,7 @@ def playerattack(player):
                     else:
                         continue
 
-            if activeenemy.dif is "basic":
+            elif activeenemy.dif is "legendary":
                 enemyinvasionchance = random.randrange(activeenemy.evasionchance, 11)
 
                 if enemyinvasionchance in [1, 2, 3, 4, 5, 6]:
@@ -1733,6 +1764,11 @@ def playerattack(player):
                 return
 
 
+        elif attack == 'override':
+            override = True
+            return
+
+
 def seeinventory():
 
     global inventory
@@ -1799,6 +1835,12 @@ def battle():
 
         playerattack(player)
 
+        if override is True:
+            return
+
+        elif override is False:
+            pass
+
         if escape is True:
             return
         if escape is False:
@@ -1819,88 +1861,140 @@ def battle():
 def menu():
 
     global playerlocation
-
-    locationfind = location.index(playerlocation)
+    global activequest
+    global playergold
 
     if town is True:
+
         while True:
             clear_screen()
             sleep(.5)
+            print("Current location: %s" % playerlocation)
+            print("\n" * 0)
+            print("Health: %s" % player.health)
+            print("\n" * 0)
+            print("Equipped Weapon: %s" % playeractiveweapon.name)
+            print("\n" * 0)
+            print("Equipped Armor: %s" % playeractivearmor)
+            print("\n" * 0)
+            print("Active Quest: %s" % activequestname)
+            print("\n" * 0)
+            print("Gold: %s" % playergold)
+            print("\n" * 1)
+
             menuchoice = str.lower(input("Travel, Shop, Quests or Change Equipment? "))
 
             if menuchoice == 'travel':
 
-                clear_screen()
-                sleep(.5)
-                i = 0
                 while True:
-                    if i == len(location):
-                        break
-                    print(location[i])
-                    i += 1
-
-                movechoice = str.title(input("Travel to which location? (%s, %s)" % (location[locationfind + 1],
-                                                                                   location[locationfind - 1])))
-
-                if movechoice == location[locationfind + 1]:
-                    playerlocation = movechoice
                     clear_screen()
                     sleep(.5)
-                    print("You are traveling to %s..." % playerlocation)
-                    sleep(2)
+                    i = 0
+                    while True:
+                        if i == len(location):
+                            break
+                        print(location[i])
+                        i += 1
+                    locationfind = location.index(playerlocation)
 
-                    travelattack = random.randrange(1, 11)
+                    print("\n" * 0)
 
-                    if travelattack in [1, 2, 3, 4, 5]:
+                    movechoice = str.title(input("Travel to which location? (%s, %s)" % (location[locationfind + 1],
+                                                                                       location[locationfind - 1])))
 
-                        randomenemyselection = random.choice(travelenemies)
+                    if movechoice == location[locationfind + 1]:
+                        playerlocation = movechoice
                         clear_screen()
                         sleep(.5)
-                        print("You were unlucky on your journey, and ran into a %s! " % randomenemyselection.name)
-                        sleep(.5)
-                        clear_screen()
-                        activeenemy = randomenemyselection
-                        battle()
-                        print("good")
+                        print("You are traveling to %s..." % playerlocation)
+                        sleep(2)
 
-                    if travelattack in [6, 7, 8, 9, 10]:
+                        travelattack = random.randrange(1, 11)
+
+                        if travelattack in [1, 2, 3, 4, 5]:
+
+                            randomenemyselection = random.choice(travelenemies)
+                            clear_screen()
+                            sleep(.5)
+                            print("You were unlucky on your journey, and ran into a %s! " % randomenemyselection.name)
+                            while True:
+                                a = input("Press enter to continue...")
+                                if a == '':
+                                    clear_screen()
+                                    sleep(.5)
+                                    break
+                            activeenemy = randomenemyselection
+                            battle()
+                            return
+
+
+                        if travelattack in [6, 7, 8, 9, 10]:
+                            clear_screen()
+                            sleep(.5)
+                            return
+
+                    elif movechoice == location[locationfind - 1]:
+                        playerlocation = movechoice
+                        clear_screen()
+                        sleep(.5)
+                        print("You are traveling to %s..." % playerlocation)
+                        sleep(2)
+
+                        travelattack = random.randrange(1, 11)
+
+                        if travelattack in [1, 2, 3, 4, 5]:
+
+                            randomenemyselection = random.choice(travelenemies)
+                            clear_screen()
+                            sleep(.5)
+                            print("You were unlucky on your journey, and ran into a %s! " % randomenemyselection.name)
+                            while True:
+                                a = input("Press enter to continue...")
+                                if a == '':
+                                    clear_screen()
+                                    sleep(.5)
+                                    break
+                            activeenemy = randomenemyselection
+                            battle()
+                            return
+
+
+                        if travelattack in [6, 7, 8, 9, 10]:
+                            clear_screen()
+                            sleep(.5)
+                            return
+
+                    elif movechoice in location:
+                        clear_screen()
+                        sleep(.5)
+                        print("You can't reach %s from here! " % movechoice)
+                        while True:
+                            a = input("Press enter to continue...")
+                            if a == '':
+                                clear_screen()
+                                sleep(.5)
+                                break
                         continue
 
-                elif movechoice == location[locationfind - 1]:
-                    print("False")
-                    while True:
-                        a = input("Press enter to continue...")
-                        if a == '':
-                            clear_screen()
-                            sleep(.5)
-                            break
-                    continue
-
-                elif movechoice in location:
-                    print("You can't reach %s from here! " % movechoice)
-                    while True:
-                        a = input("Press enter to continue...")
-                        if a == '':
-                            clear_screen()
-                            sleep(.5)
-                            break
-                    continue
-
-                else:
-                    print("That place does not exist! ")
-                    while True:
-                        a = input("Press enter to continue...")
-                        if a == '':
-                            clear_screen()
-                            sleep(.5)
-                            break
-                    continue
+                    else:
+                        clear_screen()
+                        sleep(.5)
+                        print("That place does not exist! ")
+                        while True:
+                            a = input("Press enter to continue...")
+                            if a == '':
+                                clear_screen()
+                                sleep(.5)
+                                break
+                        continue
 
             if menuchoice == 'shop':
                 pass
 
             if menuchoice == 'quests':
-                pass
+                clear_screen()
+                sleep(.5)
+                quest()
 
             if menuchoice == 'change equipment':
                 pass
@@ -1910,34 +2004,55 @@ def q1():
 
     global playerlocation
     global questlocation
+    global activeenemy
 
-    questlocation = "The Grand Castle"
+    questlocation = "Grand Castle"
+    activequest = "q1"
 
     while True:
 
         if playerlocation == questlocation:
+            print("As you reach the castle, you start to hear yelling from inside the village")
             while True:
                 a = input("Press enter to continue...")
                 if a == '':
                     clear_screen()
                     sleep(.5)
                     break
+            print("You quickly run inside, only to meet a bandit who is terrorizing the small town")
+            while True:
+                a = input("Press enter to continue...")
+                if a == '':
+                    clear_screen()
+                    sleep(.5)
+                    break
+            activeenemy = bandit
+            battle()
+
+            print("The defeated bandit falls, leaving the village to cheer you on ")
+
+
 
         if playerlocation != questlocation:
             clear_screen()
             sleep(.5)
-            print("For this quest, you need to travel to %s! " % questlocation)
-            while True:
-                a = input("Press enter to continue...")
-                if a == '':
-                    break
-            menu()
-            continue
+            if cycle is False:
+                print("For this quest, you need to travel to %s! " % questlocation)
+                questcycle = True
+                while True:
+                    a = input("Press enter to continue...")
+                    if a == '':
+                        break
+                menu()
+                continue
+            if cycle is True:
+                clear_screen()
+                sleep(.5)
+                menu()
 
 
 #QUESTS
-questlocation = None
-questlist = ["Find A Way To The Castle"]
+questlist = []
 questsrun = {"Find A Way To The Castle" : q1,
              }
 
@@ -1949,8 +2064,8 @@ def quest():
         choice = str.title(input("Which quest? "))
 
         if choice in questlist:
+            activequestname = choice
             questsrun[choice]()
-
 
         if choice not in questlist:
             clear_screen()
@@ -1963,10 +2078,8 @@ def quest():
                     sleep(.5)
                     break
 
-battle()
-menu()
-#START
 
+#START
 while True:
     sleep(.5)
     print("Welcome Player! ")
@@ -2011,14 +2124,33 @@ while True:
         break
 
 while True:
-    classpick = str.lower(input("What do you remember? (Knight, Warrior, Hunter, Rogue, Mage) ('class' + info for more"            
-                                " information)"))
+
+    print("Knight - Hp: 300, Energy: 25,Carry: 30, Class Bonus: Shields increase defense by 10% more"
+          "\nStarts with: Iron Sword, Iron Armor")
+    print("\n" * 0)
+    print("Warrior - Hp: 400, Energy: 30, Carry: 35, Class Bonus: Rage Potion's affects increase damage by 20% more"
+          "\nStarts with: Iron Axe, Leather Armor,")
+    print("\n" * 0)
+    print("Mage - Hp: 250, Energy: 45, Carry: 25, Class Bonus: Magic weapons deal 30% more damage"
+              "\n Starts with: Mage's Staff, Magic Robe")
+    print("\n" * 0)
+    print("Hunter - Hp: 250, Energy: 40, Carry: 20, Class Bonus: Long Ranged weapons deal 20% more damage"
+              "\n Starts with: Standard Bow, Hunter's Cloak")
+    print("\n" * 0)
+    print("Rogue - Hp: 250, Energy: 30, Carry: 25, Class Bonus: Evasion chance increased by 40%"
+              "\n Starts with: Dagger, Stealth Cloak")
+    print("\n" * 1)
+
+    classpick = str.lower(input("What do you remember? (Choose a class)"))
+
     if classpick == 'knight':
+        clear_screen()
         sleep(.5)
         print("You have chosen the Knight class! ")
         playerclass = 'knight'
         inventory.append("Iron Armor")
         inventory.append("Iron Sword")
+        armorstrength = .4
         while True:
             a = input("Press enter to continue...")
             if a == '':
@@ -2029,12 +2161,14 @@ while True:
         break
 
     elif classpick == 'warrior':
+        clear_screen()
         sleep(.5)
         print("You have chosen the Warrior class! ")
         playerclass = 'warrior'
         player.rageeffect += .2
         inventory.append("Iron Axe")
         inventory.append("Leather Armor")
+        armorstrength = .1
         while True:
             a = input("Press enter to continue...")
             if a == '':
@@ -2043,8 +2177,8 @@ while True:
                 break
         break
 
-
     elif classpick == 'hunter':
+        clear_screen()
         sleep(.5)
         print("You have chosen the Hunter class! ")
         playerclass = 'hunter'
@@ -2057,6 +2191,7 @@ while True:
         break
 
     elif classpick == 'rogue':
+        clear_screen()
         sleep(.5)
         print("You have chosen the Rogue class! ")
         playerclass = 'rogue'
@@ -2069,6 +2204,7 @@ while True:
         break
 
     elif classpick == 'mage':
+        clear_screen()
         sleep(.5)
         print("You have chosen the Mage class! ")
         playerclass = 'mage'
@@ -2080,68 +2216,16 @@ while True:
                 break
         break
 
-    elif classpick == 'knightinfo':
-        print("Hp: 300 \nDefense: 30% Physical \nEnergy: 25 \nCarry: 30 \nOther: Shields increase defense by 10% more"
-              "\nStarts with: Iron Sword, Iron Armor")
-        while True:
-            a = input("Press enter to continue...")
-            if a == '':
-                clear_screen()
-                sleep(.5)
-                break
-        continue
-
-    elif classpick == 'warriorinfo':
-        print("Hp: 400 \nDefense: 10% Physical \nEnergy: 30 \nCarry: 35 \nOther: Rage Potion's affects increase damage by 20% more"
-              "\nStarts with: Iron Axe, Leather Armor,")
-
-        while True:
-            a = input("Press enter to continue...")
-            if a == '':
-                clear_screen()
-                sleep(.5)
-                break
-        continue
-
-    elif classpick == 'hunterinfo':
-        print("Hp: 250 \nDefense: 0% \nEnergy: 40 \nCarry: 20 \nOther: Long Ranged weapons deal 20% more damage"
-              "\n Starts with: Standard Bow, Hunter's Cloak")
-        while True:
-            a = input("Press enter to continue...")
-            if a == '':
-                clear_screen()
-                sleep(.5)
-                break
-        continue
-
-    elif classpick == 'rogueinfo':
-        print("Hp: 250 \nDefense: 10% Physical \nEnergy: 30 \nCarry: 25 \nOther: Evasion chance increased by 40%"
-              "\n Starts with: Dagger, Stealth Cloak")
-        while True:
-            a = input("Press enter to continue...")
-            if a == '':
-                clear_screen()
-                sleep(.5)
-                break
-        continue
-
-    elif classpick == 'mageinfo':
-        print("Hp: 250 \nDefense: 40% Magical \nEnergy: 45 \nCarry: 25 \n Other: Magic weapons deal 30% more damage"
-              "\n Starts with: Mage's Staff, Magic Robe")
-        while True:
-            a = input("Press enter to continue...")
-            if a == '':
-                clear_screen()
-                sleep(.5)
-                break
-        continue
-
     else:
+        clear_screen()
+        sleep(.5)
         print("Not a valid input! ")
         while True:
-            clear_screen()
-            sleep(.5)
-            break
+            a = input("Press enter to continue...")
+            if a == '':
+                clear_screen()
+                sleep(.5)
+                break
         continue
 
 print("Regaining your strength, you stumble out of the cave, and into the blinding light")
@@ -2151,7 +2235,7 @@ while True:
         clear_screen()
         sleep(.5)
         break
-print("Taking a look around you, there is a stone castle with what looks like a large wall, and a village inside")
+print("Taking a look around you, you see a stone castle with what looks like a large wall \nand a village inside")
 while True:
     a = input("Press enter to continue...")
     if a == '':
@@ -2163,6 +2247,5 @@ questlist.append("Find A Way To The Castle")
 while True:
     a = input("Press enter to continue...")
     if a == '':
-        clear_screen()
-        sleep(.5)
         break
+menu()
